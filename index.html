@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Malay A1-A2 Quiz: офлайн-интерактивный тест по малайскому языку (CEFR A1-A2)."
+    />
+    <title>Malay A1-A2 Quiz</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="page-bg" aria-hidden="true"></div>
+    <div class="app-shell">
+      <header class="app-header">
+        <p class="eyebrow">Malay A1-A2 Quiz</p>
+        <h1>Тест по малайскому языку (CEFR A1-A2)</h1>
+        <p class="subtitle">Malay questions + Russian/English интерфейс. Полностью офлайн.</p>
+      </header>
+
+      <section class="status-grid" aria-label="Quiz status">
+        <article class="status-card">
+          <p class="status-label">Таймер / Timer</p>
+          <p id="timer" class="status-value" aria-live="polite">10:00</p>
+        </article>
+        <article class="status-card">
+          <p class="status-label">Прогресс / Progress</p>
+          <p id="progressLabel" class="status-value">0 / 30</p>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progressBar" class="progress-fill"></div>
+          </div>
+        </article>
+        <article class="status-card">
+          <p class="status-label">Страница / Page</p>
+          <p id="pageLabel" class="status-value">1 / 6</p>
+        </article>
+      </section>
+
+      <main id="quizRegion" class="quiz-region" aria-live="polite"></main>
+
+      <nav class="nav-actions" aria-label="Quiz navigation">
+        <button id="prevBtn" type="button" class="btn btn-ghost">← Previous / Назад</button>
+        <button id="nextBtn" type="button" class="btn btn-primary">Next / Далее →</button>
+        <button id="submitBtn" type="button" class="btn btn-success">Submit / Завершить</button>
+      </nav>
+
+      <section id="loadingState" class="loading-state" aria-live="polite">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p>Loading quiz... / Загружаем тест...</p>
+      </section>
+
+      <noscript>
+        <p class="noscript-note">
+          Для работы теста нужен JavaScript. Please enable JavaScript to run this quiz.
+        </p>
+      </noscript>
+    </div>
+
+    <div id="resultsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+      <div class="modal-panel">
+        <h2 id="resultTitle">Результаты / Results</h2>
+        <div id="resultSummary" class="result-summary"></div>
+        <div id="resultBreakdown" class="result-breakdown"></div>
+        <div id="detailedResults" class="detailed-results"></div>
+        <div class="modal-actions">
+          <button id="restartBtn" type="button" class="btn btn-primary">Restart / Пройти снова</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
