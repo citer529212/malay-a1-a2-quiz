@@ -12,42 +12,72 @@
   </head>
   <body>
     <div class="page-bg" aria-hidden="true"></div>
+
     <div class="app-shell">
       <header class="app-header">
         <p class="eyebrow">Malay A1-A2 Quiz</p>
         <h1>Тест по малайскому языку (CEFR A1-A2)</h1>
-        <p class="subtitle">Malay questions + Russian/English интерфейс. Полностью офлайн.</p>
+        <p class="subtitle">Malay questions + Russian/English интерфейс. Полностью онлайн в браузере.</p>
       </header>
 
-      <section class="status-grid" aria-label="Quiz status">
-        <article class="status-card">
-          <p class="status-label">Таймер / Timer</p>
-          <p id="timer" class="status-value" aria-live="polite">10:00</p>
-        </article>
-        <article class="status-card">
-          <p class="status-label">Прогресс / Progress</p>
-          <p id="progressLabel" class="status-value">0 / 30</p>
-          <div class="progress-track" aria-hidden="true">
-            <div id="progressBar" class="progress-fill"></div>
-          </div>
-        </article>
-        <article class="status-card">
-          <p class="status-label">Страница / Page</p>
-          <p id="pageLabel" class="status-value">1 / 6</p>
-        </article>
+      <section id="startScreen" class="start-screen" aria-labelledby="startTitle">
+        <h2 id="startTitle">Начало теста / Start Quiz</h2>
+        <p>Перед началом студент должен ввести имя и фамилию.</p>
+
+        <form id="startForm" class="start-form" novalidate>
+          <label class="field-label" for="firstNameInput">Имя / First Name</label>
+          <input
+            id="firstNameInput"
+            class="answer-input"
+            type="text"
+            required
+            maxlength="60"
+            autocomplete="given-name"
+            placeholder="Например, Anna"
+          />
+
+          <label class="field-label" for="lastNameInput">Фамилия / Last Name</label>
+          <input
+            id="lastNameInput"
+            class="answer-input"
+            type="text"
+            required
+            maxlength="60"
+            autocomplete="family-name"
+            placeholder="Например, Ivanova"
+          />
+
+          <p id="startError" class="start-error" aria-live="polite"></p>
+          <button id="startBtn" type="submit" class="btn btn-primary">Start / Начать тест</button>
+        </form>
       </section>
 
-      <main id="quizRegion" class="quiz-region" aria-live="polite"></main>
+      <section id="quizContent" class="quiz-content hidden">
+        <section class="status-grid" aria-label="Quiz status">
+          <article class="status-card">
+            <p class="status-label">Таймер / Timer</p>
+            <p id="timer" class="status-value" aria-live="polite">10:00</p>
+          </article>
+          <article class="status-card">
+            <p class="status-label">Прогресс / Progress</p>
+            <p id="progressLabel" class="status-value">0 / 30</p>
+            <div class="progress-track" aria-hidden="true">
+              <div id="progressBar" class="progress-fill"></div>
+            </div>
+          </article>
+          <article class="status-card">
+            <p class="status-label">Страница / Page</p>
+            <p id="pageLabel" class="status-value">1 / 6</p>
+          </article>
+        </section>
 
-      <nav class="nav-actions" aria-label="Quiz navigation">
-        <button id="prevBtn" type="button" class="btn btn-ghost">← Previous / Назад</button>
-        <button id="nextBtn" type="button" class="btn btn-primary">Next / Далее →</button>
-        <button id="submitBtn" type="button" class="btn btn-success">Submit / Завершить</button>
-      </nav>
+        <main id="quizRegion" class="quiz-region" aria-live="polite"></main>
 
-      <section id="loadingState" class="loading-state" aria-live="polite">
-        <div class="loading-spinner" aria-hidden="true"></div>
-        <p>Loading quiz... / Загружаем тест...</p>
+        <nav class="nav-actions" aria-label="Quiz navigation">
+          <button id="prevBtn" type="button" class="btn btn-ghost">← Previous / Назад</button>
+          <button id="nextBtn" type="button" class="btn btn-primary">Next / Далее →</button>
+          <button id="submitBtn" type="button" class="btn btn-success">Submit / Завершить</button>
+        </nav>
       </section>
 
       <noscript>
@@ -61,10 +91,11 @@
       <div class="modal-panel">
         <h2 id="resultTitle">Результаты / Results</h2>
         <div id="resultSummary" class="result-summary"></div>
+        <div id="syncStatus" class="sync-status"></div>
         <div id="resultBreakdown" class="result-breakdown"></div>
         <div id="detailedResults" class="detailed-results"></div>
         <div class="modal-actions">
-          <button id="restartBtn" type="button" class="btn btn-primary">Restart / Пройти снова</button>
+          <button id="restartBtn" type="button" class="btn btn-primary">Новый студент / New Student</button>
         </div>
       </div>
     </div>

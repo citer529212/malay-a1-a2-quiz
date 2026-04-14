@@ -28,6 +28,10 @@ body {
   line-height: 1.45;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .page-bg {
   position: fixed;
   inset: 0;
@@ -70,6 +74,49 @@ body {
 .subtitle {
   margin: 0;
   opacity: 0.92;
+}
+
+.start-screen {
+  margin-top: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 6px 18px rgba(26, 93, 107, 0.08);
+  animation: fade-up 220ms ease-out;
+}
+
+.start-screen h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.start-screen p {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+}
+
+.start-form {
+  margin-top: 0.8rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.field-label {
+  margin-top: 0.3rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.start-error {
+  min-height: 1.2rem;
+  margin: 0.2rem 0;
+  color: #8e1d28;
+  font-weight: 600;
+}
+
+.quiz-content {
+  animation: fade-up 220ms ease-out;
 }
 
 .status-grid {
@@ -239,30 +286,6 @@ body {
   color: var(--primary);
 }
 
-.loading-state {
-  margin-top: 0.9rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
-
-.loading-state.hidden {
-  display: none;
-}
-
-.loading-spinner {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 3px solid #d5e7e3;
-  border-top-color: var(--primary);
-  animation: spin 900ms linear infinite;
-}
-
 .noscript-note {
   margin-top: 1rem;
   padding: 0.8rem;
@@ -303,6 +326,34 @@ body {
   border-radius: 12px;
   background: #f0f8f7;
   border: 1px solid #cde4df;
+}
+
+.sync-status {
+  margin-top: 0.7rem;
+  border-radius: 10px;
+  padding: 0.6rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: #f3f4f6;
+  color: #344054;
+}
+
+.sync-status.pending {
+  background: #fff8e6;
+  border-color: #f1d28a;
+  color: #7a4b00;
+}
+
+.sync-status.success {
+  background: #e8f7f3;
+  border-color: #97d9c8;
+  color: #0f624f;
+}
+
+.sync-status.error {
+  background: #fff2f3;
+  border-color: #f2b9bf;
+  color: #8e1d28;
 }
 
 .result-breakdown {
@@ -356,6 +407,7 @@ body {
   }
 
   .app-header,
+  .start-screen,
   .status-card,
   .question-card,
   .modal-panel {
@@ -368,12 +420,6 @@ body {
 
   .nav-actions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
   }
 }
 

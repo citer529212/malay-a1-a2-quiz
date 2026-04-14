@@ -35,13 +35,16 @@ const quizData = [
   { id: 30, section: 4, type: "text", q: "Составьте: «Я / есть / рис»", correct: "saya makan nasi", points: 2 }
 ];
 
+// Paste your Google Apps Script Web App URL here.
+const SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxO-ZmiuMRzaxXn2dPAkQ4lbgRneHSWiMMTffoUTTqRbUYYjI50qyq-fYs71FUkIoJV/exec";
+
 const TOTAL_TIME_SECONDS = 10 * 60;
 const QUESTIONS_PER_PAGE = 5;
 const TOTAL_PAGES = Math.ceil(quizData.length / QUESTIONS_PER_PAGE);
 const MAX_SCORE = quizData.reduce((acc, item) => acc + item.points, 0);
 
-const questionMap = Object.fromEntries(quizData.map((item) => [item.id, item]));
 const refs = {};
+const questionMap = Object.fromEntries(quizData.map((item) => [item.id, item]));
 
 const state = {
   currentPage: 0,
@@ -49,10 +52,20 @@ const state = {
   timerId: null,
   remainingSeconds: TOTAL_TIME_SECONDS,
   startedAtMs: 0,
-  finished: false
+  finished: true,
+  studentFirstName: "",
+  studentLastName: "",
+  studentFullName: ""
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  refs.startScreen = document.getElementById("startScreen");
+  refs.startForm = document.getElementById("startForm");
+  refs.firstNameInput = document.getElementById("firstNameInput");
+  refs.lastNameInput = document.getElementById("lastNameInput");
+  refs.startError = document.getElementById("startError");
+
+  refs.quizContent = document.getElementById("quizContent");
   refs.timer = document.getElementById("timer");
   refs.progressLabel = document.getElementById("progressLabel");
   refs.progressBar = document.getElementById("progressBar");
@@ -61,24 +74,72 @@ document.addEventListener("DOMContentLoaded", () => {
   refs.prevBtn = document.getElementById("prevBtn");
   refs.nextBtn = document.getElementById("nextBtn");
   refs.submitBtn = document.getElementById("submitBtn");
-  refs.loadingState = document.getElementById("loadingState");
+
   refs.resultsModal = document.getElementById("resultsModal");
   refs.resultSummary = document.getElementById("resultSummary");
+  refs.syncStatus = document.getElementById("syncStatus");
   refs.resultBreakdown = document.getElementById("resultBreakdown");
   refs.detailedResults = document.getElementById("detailedResults");
   refs.restartBtn = document.getElementById("restartBtn");
 
+  refs.startForm.addEventListener("submit", handleStartQuiz);
   refs.prevBtn.addEventListener("click", handlePrevious);
   refs.nextBtn.addEventListener("click", handleNext);
   refs.submitBtn.addEventListener("click", handleSubmit);
-  refs.restartBtn.addEventListener("click", restartQuiz);
+  refs.restartBtn.addEventListener("click", handleRestart);
 
-  // Small loading delay for smoother UX transition.
-  setTimeout(() => {
-    refs.loadingState.classList.add("hidden");
-    initializeQuiz();
-  }, 420);
+  showStartScreen();
 });
+
+function showStartScreen() {
+  clearTimer();
+  refs.resultsModal.classList.remove("open");
+  refs.quizContent.classList.add("hidden");
+  refs.startScreen.classList.remove("hidden");
+
+  state.currentPage = 0;
+  state.answers = {};
+  state.remainingSeconds = TOTAL_TIME_SECONDS;
+  state.startedAtMs = 0;
+  state.finished = true;
+
+  refs.startError.textContent = "";
+  refs.timer.classList.remove("warning");
+  refs.timer.textContent = "10:00";
+  refs.progressLabel.textContent = `0 / ${quizData.length}`;
+  refs.progressBar.style.width = "0%";
+  refs.pageLabel.textContent = `1 / ${TOTAL_PAGES}`;
+  refs.quizRegion.innerHTML = "";
+
+  refs.prevBtn.disabled = true;
+  refs.nextBtn.disabled = true;
+  refs.submitBtn.disabled = true;
+
+  setSyncStatus("Статус отправки появится после завершения теста.", "");
+}
+
+function handleStartQuiz(event) {
+  event.preventDefault();
+
+  const firstName = refs.firstNameInput.value.trim();
+  const lastName = refs.lastNameInput.value.trim();
+
+  if (!firstName || !lastName) {
+    refs.startError.textContent = "Введите имя и фамилию. / Enter both first and last name.";
+    return;
+  }
+
+  state.studentFirstName = firstName;
+  state.studentLastName = lastName;
+  state.studentFullName = `${firstName} ${lastName}`;
+
+  refs.startError.textContent = "";
+  refs.startScreen.classList.add("hidden");
+  refs.quizContent.classList.remove("hidden");
+
+  initializeQuiz();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 function initializeQuiz() {
   state.currentPage = 0;
@@ -160,31 +221,35 @@ function submitQuiz(reason) {
 
   state.finished = true;
   clearTimer();
+
   refs.prevBtn.disabled = true;
   refs.nextBtn.disabled = true;
   refs.submitBtn.disabled = true;
 
   const results = calculateResults();
   renderResults(results, reason);
+  void sendResultsToSheets(results, reason);
 }
 
 function calculateResults() {
   const sectionScores = { 1: 0, 2: 0, 3: 0, 4: 0 };
   const sectionMax = { 1: 0, 2: 0, 3: 0, 4: 0 };
   const details = [];
+
   let totalScore = 0;
   let totalCorrect = 0;
 
   for (const item of quizData) {
     sectionMax[item.section] += item.points;
+
     const userAnswer = state.answers[item.id] || "";
     const correctAnswer = item.type === "mcq" ? item.options[item.correct] : item.correct;
     const isCorrect = normalizeText(userAnswer) === normalizeText(correctAnswer);
 
     if (isCorrect) {
       totalScore += item.points;
-      sectionScores[item.section] += item.points;
       totalCorrect += 1;
+      sectionScores[item.section] += item.points;
     }
 
     details.push({
@@ -225,10 +290,10 @@ function determineLevel(score) {
 }
 
 function renderResults(results, reason) {
-  const timeoutNote =
-    reason === "time" ? "<p><strong>Время вышло:</strong> тест отправлен автоматически.</p>" : "";
+  const timeoutNote = reason === "time" ? "<p><strong>Время вышло:</strong> тест отправлен автоматически.</p>" : "";
 
   refs.resultSummary.innerHTML = `
+    <p><strong>Student:</strong> ${escapeHtml(state.studentFullName)}</p>
     <p><strong>Score:</strong> ${results.totalScore} / ${MAX_SCORE}</p>
     <p><strong>Level:</strong> ${results.level}</p>
     <p><strong>Time Used:</strong> ${formatTime(results.timeUsedSeconds)} / 10:00</p>
@@ -250,10 +315,9 @@ function renderResults(results, reason) {
       const safeQuestion = escapeHtml(item.question);
       const safeUser = item.userAnswer ? escapeHtml(item.userAnswer) : "<em>Нет ответа / No answer</em>";
       const safeCorrect = escapeHtml(item.correctAnswer);
-      const explanation =
-        item.type === "mcq"
-          ? "Проверка выполнена по точному совпадению выбранного варианта (без учета регистра)."
-          : "Проверка выполнена после нормализации текста: trim + lowercase + удаление лишней пунктуации/пробелов.";
+      const explanation = item.type === "mcq"
+        ? "Проверка: точное совпадение выбранного варианта (без учета регистра)."
+        : "Проверка: trim + lowercase + удаление лишней пунктуации/пробелов.";
 
       return `
         <article class="result-item ${item.isCorrect ? "correct" : "incorrect"}">
@@ -268,15 +332,94 @@ function renderResults(results, reason) {
     })
     .join("");
 
+  setSyncStatus("Подготовка отправки в Google Sheets...", "pending");
   refs.resultsModal.classList.add("open");
 }
 
-function restartQuiz() {
-  refs.resultsModal.classList.remove("open");
-  refs.prevBtn.disabled = false;
-  refs.nextBtn.disabled = false;
-  refs.submitBtn.disabled = false;
-  initializeQuiz();
+async function sendResultsToSheets(results, reason) {
+  if (!SHEETS_WEB_APP_URL || SHEETS_WEB_APP_URL.includes("PASTE_")) {
+    setSyncStatus("Google Sheets не настроен: вставьте Web App URL в script.js", "error");
+    return;
+  }
+
+  const payload = {
+    submittedAtIso: new Date().toISOString(),
+    studentFirstName: state.studentFirstName,
+    studentLastName: state.studentLastName,
+    studentFullName: state.studentFullName,
+    score: results.totalScore,
+    maxScore: MAX_SCORE,
+    level: results.level,
+    correctCount: results.totalCorrect,
+    incorrectCount: results.totalIncorrect,
+    timeUsed: formatTime(results.timeUsedSeconds),
+    timeUsedSeconds: results.timeUsedSeconds,
+    finishReason: reason,
+    section1Score: results.sectionScores[1],
+    section1Max: results.sectionMax[1],
+    section2Score: results.sectionScores[2],
+    section2Max: results.sectionMax[2],
+    section3Score: results.sectionScores[3],
+    section3Max: results.sectionMax[3],
+    section4Score: results.sectionScores[4],
+    section4Max: results.sectionMax[4],
+    answers: results.details.map((item) => ({
+      id: item.id,
+      section: item.section,
+      points: item.points,
+      earned: item.earned,
+      isCorrect: item.isCorrect,
+      userAnswer: item.userAnswer,
+      correctAnswer: item.correctAnswer
+    }))
+  };
+
+  setSyncStatus("Отправляем результат в Google Sheets...", "pending");
+
+  try {
+    const response = await fetch(SHEETS_WEB_APP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    setSyncStatus("Результат успешно отправлен в Google Sheets.", "success");
+  } catch (primaryError) {
+    try {
+      await fetch(SHEETS_WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      setSyncStatus("Результат отправлен (no-cors). Проверьте запись в таблице.", "success");
+    } catch (fallbackError) {
+      console.error("Google Sheets send failed", { primaryError, fallbackError });
+      setSyncStatus("Не удалось отправить результат. Проверьте URL Apps Script.", "error");
+    }
+  }
+}
+
+function setSyncStatus(message, type) {
+  refs.syncStatus.textContent = message;
+  refs.syncStatus.className = "sync-status";
+
+  if (type) {
+    refs.syncStatus.classList.add(type);
+  }
+}
+
+function handleRestart() {
+  refs.startForm.reset();
+  state.studentFirstName = "";
+  state.studentLastName = "";
+  state.studentFullName = "";
+
+  showStartScreen();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -311,8 +454,7 @@ function renderQuestionCard(item, questionNumber) {
     const options = item.options
       .map((option, optionIndex) => {
         const inputId = `q${item.id}_opt${optionIndex}`;
-        const checked =
-          normalizeText(state.answers[item.id] || "") === normalizeText(option) ? "checked" : "";
+        const checked = normalizeText(state.answers[item.id] || "") === normalizeText(option) ? "checked" : "";
 
         return `
           <label class="option-item" for="${inputId}">
@@ -379,6 +521,7 @@ function attachQuestionListeners() {
 function updateNavigationButtons() {
   refs.prevBtn.disabled = state.currentPage === 0 || state.finished;
   refs.nextBtn.disabled = state.currentPage === TOTAL_PAGES - 1 || state.finished;
+  refs.submitBtn.disabled = state.finished;
 }
 
 function updateProgress() {
