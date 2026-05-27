@@ -2511,9 +2511,17 @@ function buildSubmissionPayload(result, finishReason, updatedProgress) {
 }
 
 async function submitToSheets(payload) {
-  const formData = new FormData();
-  Object.entries(payload).forEach(([key, value]) => formData.append(key, String(value)));
-  await fetch(CONFIG.appsScriptUrl, { method: "POST", mode: "no-cors", body: formData });
+  const params = new URLSearchParams();
+  Object.entries(payload).forEach(([key, value]) => {
+    params.append(key, String(value ?? ""));
+  });
+
+  await fetch(CONFIG.appsScriptUrl, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+    body: params.toString()
+  });
 }
 
 function renderResults(result, updatedProgress) {
