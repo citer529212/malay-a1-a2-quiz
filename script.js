@@ -1,5 +1,4 @@
 const quizData = [
-  // PART 1: Multiple Choice (1 pt each)
   { id: 1, section: 1, type: "mcq", q: "Как сказать «Меня зовут Анна»?", options: ["Saya suka Anna", "Nama saya Anna", "Saya dari Anna", "Anna saya nama"], correct: 1, points: 1 },
   { id: 2, section: 1, type: "mcq", q: "Какое слово означает «дом»?", options: ["sekolah", "rumah", "jalan", "bandar"], correct: 1, points: 1 },
   { id: 3, section: 1, type: "mcq", q: "Что означает слово «nasi»?", options: ["рыба", "курица", "рис", "вода"], correct: 2, points: 1 },
@@ -10,7 +9,6 @@ const quizData = [
   { id: 8, section: 1, type: "mcq", q: "Как сказать «У меня есть сестра»?", options: ["Saya suka adik", "Saya ada seorang adik", "Saya lihat adik", "Saya dan adik"], correct: 1, points: 1 },
   { id: 9, section: 1, type: "mcq", q: "Что означает «pagi»?", options: ["вечер", "ночь", "утро", "день"], correct: 2, points: 1 },
   { id: 10, section: 1, type: "mcq", q: "Как сказать «Я люблю есть рис»?", options: ["Saya suka makan nasi", "Saya makan suka nasi", "Nasi suka saya makan", "Saya nasi suka makan"], correct: 0, points: 1 },
-  // PART 2: Fill-in (2 pts each)
   { id: 11, section: 2, type: "text", q: "Я живу в Куала-Лумпур. → Saya _____ di Kuala Lumpur.", correct: "tinggal", points: 2 },
   { id: 12, section: 2, type: "text", q: "Я люблю курицу. → Saya _____ ayam.", correct: "suka", points: 2 },
   { id: 13, section: 2, type: "text", q: "Сейчас 3 часа. → Sekarang pukul _____.", correct: "tiga", points: 2 },
@@ -21,13 +19,11 @@ const quizData = [
   { id: 18, section: 2, type: "text", q: "Где кухня? → Di mana _____?", correct: "dapur", points: 2 },
   { id: 19, section: 2, type: "text", q: "Сейчас утро. → Sekarang _____.", correct: "pagi", points: 2 },
   { id: 20, section: 2, type: "text", q: "Сколько тебе лет? → _____ umur anda?", correct: "berapa", points: 2 },
-  // PART 3: Matching (1 pt each)
   { id: 21, section: 3, type: "mcq", q: "adik = ?", options: ["дверь", "младший брат/сестра", "кухня", "рыба", "ночь"], correct: 1, points: 1 },
   { id: 22, section: 3, type: "mcq", q: "pintu = ?", options: ["дверь", "младший брат/сестра", "кухня", "рыба", "ночь"], correct: 0, points: 1 },
   { id: 23, section: 3, type: "mcq", q: "dapur = ?", options: ["дверь", "младший брат/сестра", "кухня", "рыба", "ночь"], correct: 2, points: 1 },
   { id: 24, section: 3, type: "mcq", q: "ikan = ?", options: ["дверь", "младший брат/сестра", "кухня", "рыба", "ночь"], correct: 3, points: 1 },
   { id: 25, section: 3, type: "mcq", q: "malam = ?", options: ["дверь", "младший брат/сестра", "кухня", "рыба", "ночь"], correct: 4, points: 1 },
-  // PART 4: Translation/Completion (2 pts each)
   { id: 26, section: 4, type: "text", q: "Переведите: «Меня зовут [имя]».", correct: "nama saya", points: 2 },
   { id: 27, section: 4, type: "text", q: "Переведите: «Я люблю свою семью».", correct: "saya suka keluarga saya", points: 2 },
   { id: 28, section: 4, type: "text", q: "Дополните: «Сейчас 5 часов» → Sekarang pukul _____.", correct: "lima", points: 2 },
@@ -35,528 +31,527 @@ const quizData = [
   { id: 30, section: 4, type: "text", q: "Составьте: «Я / есть / рис»", correct: "saya makan nasi", points: 2 }
 ];
 
-// Paste your Google Apps Script Web App URL here.
-const SHEETS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxO-ZmiuMRzaxXn2dPAkQ4lbgRneHSWiMMTffoUTTqRbUYYjI50qyq-fYs71FUkIoJV/exec";
-
-const TOTAL_TIME_SECONDS = 10 * 60;
-const QUESTIONS_PER_PAGE = 5;
-const TOTAL_PAGES = Math.ceil(quizData.length / QUESTIONS_PER_PAGE);
-const MAX_SCORE = quizData.reduce((acc, item) => acc + item.points, 0);
-
-const refs = {};
-const questionMap = Object.fromEntries(quizData.map((item) => [item.id, item]));
-
-const state = {
-  currentPage: 0,
-  answers: {},
-  timerId: null,
-  remainingSeconds: TOTAL_TIME_SECONDS,
-  startedAtMs: 0,
-  finished: true,
-  studentFirstName: "",
-  studentLastName: "",
-  studentFullName: ""
+const CONFIG = {
+  appsScriptUrl: "https://script.google.com/macros/s/AKfycbxO-ZmiuMRzaxXn2dPAkQ4lbgRneHSWiMMTffoUTTqRbUYYjI50qyq-fYs71FUkIoJV/exec",
+  secondsTotal: 10 * 60,
+  questionsPerPage: 5,
+  draftKey: "malay-a1-a2-quiz-draft-v2"
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  refs.startScreen = document.getElementById("startScreen");
-  refs.startForm = document.getElementById("startForm");
-  refs.firstNameInput = document.getElementById("firstNameInput");
-  refs.lastNameInput = document.getElementById("lastNameInput");
-  refs.startError = document.getElementById("startError");
+const state = {
+  student: null,
+  currentPage: 0,
+  answers: {},
+  startedAt: null,
+  finishedAt: null,
+  remainingSeconds: CONFIG.secondsTotal,
+  timerId: null,
+  submitted: false
+};
 
-  refs.quizContent = document.getElementById("quizContent");
-  refs.timer = document.getElementById("timer");
-  refs.progressLabel = document.getElementById("progressLabel");
-  refs.progressBar = document.getElementById("progressBar");
-  refs.pageLabel = document.getElementById("pageLabel");
-  refs.quizRegion = document.getElementById("quizRegion");
-  refs.prevBtn = document.getElementById("prevBtn");
-  refs.nextBtn = document.getElementById("nextBtn");
-  refs.submitBtn = document.getElementById("submitBtn");
+const els = {
+  startScreen: document.querySelector("#startScreen"),
+  quizScreen: document.querySelector("#quizScreen"),
+  studentForm: document.querySelector("#studentForm"),
+  firstNameInput: document.querySelector("#firstNameInput"),
+  lastNameInput: document.querySelector("#lastNameInput"),
+  startError: document.querySelector("#startError"),
+  studentNameLabel: document.querySelector("#studentNameLabel"),
+  timer: document.querySelector("#timer"),
+  progressBar: document.querySelector("#progressBar"),
+  progressText: document.querySelector("#progressText"),
+  questionNav: document.querySelector("#questionNav"),
+  pageLabel: document.querySelector("#pageLabel"),
+  quizForm: document.querySelector("#quizForm"),
+  prevBtn: document.querySelector("#prevBtn"),
+  nextBtn: document.querySelector("#nextBtn"),
+  submitBtn: document.querySelector("#submitBtn"),
+  clearDraftBtn: document.querySelector("#clearDraftBtn"),
+  resultModal: document.querySelector("#resultModal"),
+  closeModalBtn: document.querySelector("#closeModalBtn"),
+  saveStatus: document.querySelector("#saveStatus"),
+  resultSummary: document.querySelector("#resultSummary"),
+  sectionBreakdown: document.querySelector("#sectionBreakdown"),
+  answerReview: document.querySelector("#answerReview"),
+  restartBtn: document.querySelector("#restartBtn")
+};
 
-  refs.resultsModal = document.getElementById("resultsModal");
-  refs.resultSummary = document.getElementById("resultSummary");
-  refs.syncStatus = document.getElementById("syncStatus");
-  refs.resultBreakdown = document.getElementById("resultBreakdown");
-  refs.detailedResults = document.getElementById("detailedResults");
-  refs.restartBtn = document.getElementById("restartBtn");
+const totalPages = Math.ceil(quizData.length / CONFIG.questionsPerPage);
+const maxScore = quizData.reduce((sum, item) => sum + item.points, 0);
 
-  refs.startForm.addEventListener("submit", handleStartQuiz);
-  refs.prevBtn.addEventListener("click", handlePrevious);
-  refs.nextBtn.addEventListener("click", handleNext);
-  refs.submitBtn.addEventListener("click", handleSubmit);
-  refs.restartBtn.addEventListener("click", handleRestart);
-
-  showStartScreen();
-});
-
-function showStartScreen() {
-  clearTimer();
-  refs.resultsModal.classList.remove("open");
-  refs.quizContent.classList.add("hidden");
-  refs.startScreen.classList.remove("hidden");
-
-  state.currentPage = 0;
-  state.answers = {};
-  state.remainingSeconds = TOTAL_TIME_SECONDS;
-  state.startedAtMs = 0;
-  state.finished = true;
-
-  refs.startError.textContent = "";
-  refs.timer.classList.remove("warning");
-  refs.timer.textContent = "10:00";
-  refs.progressLabel.textContent = `0 / ${quizData.length}`;
-  refs.progressBar.style.width = "0%";
-  refs.pageLabel.textContent = `1 / ${TOTAL_PAGES}`;
-  refs.quizRegion.innerHTML = "";
-
-  refs.prevBtn.disabled = true;
-  refs.nextBtn.disabled = true;
-  refs.submitBtn.disabled = true;
-
-  setSyncStatus("Статус отправки появится после завершения теста.", "");
+function normalizeText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[.,!?;:()[\]{}"'«»]/g, "")
+    .replace(/\s+/g, " ");
 }
 
-function handleStartQuiz(event) {
-  event.preventDefault();
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[char]));
+}
 
-  const firstName = refs.firstNameInput.value.trim();
-  const lastName = refs.lastNameInput.value.trim();
+function getAnswer(questionId) {
+  return state.answers[String(questionId)];
+}
 
-  if (!firstName || !lastName) {
-    refs.startError.textContent = "Введите имя и фамилию. / Enter both first and last name.";
-    return;
+function isAnswered(question) {
+  const value = getAnswer(question.id);
+  return value !== undefined && String(value).trim() !== "";
+}
+
+function getVisibleQuestions() {
+  const start = state.currentPage * CONFIG.questionsPerPage;
+  return quizData.slice(start, start + CONFIG.questionsPerPage);
+}
+
+function saveDraft() {
+  if (!state.student || state.submitted) return;
+
+  localStorage.setItem(CONFIG.draftKey, JSON.stringify({
+    student: state.student,
+    currentPage: state.currentPage,
+    answers: state.answers,
+    startedAt: state.startedAt,
+    remainingSeconds: state.remainingSeconds
+  }));
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(CONFIG.draftKey);
+    if (!raw) return null;
+    const draft = JSON.parse(raw);
+    if (!draft?.student?.firstName || !draft?.student?.lastName) return null;
+    return draft;
+  } catch {
+    return null;
   }
-
-  state.studentFirstName = firstName;
-  state.studentLastName = lastName;
-  state.studentFullName = `${firstName} ${lastName}`;
-
-  refs.startError.textContent = "";
-  refs.startScreen.classList.add("hidden");
-  refs.quizContent.classList.remove("hidden");
-
-  initializeQuiz();
-  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function initializeQuiz() {
-  state.currentPage = 0;
-  state.answers = {};
-  state.remainingSeconds = TOTAL_TIME_SECONDS;
-  state.startedAtMs = Date.now();
-  state.finished = false;
+function clearDraft() {
+  localStorage.removeItem(CONFIG.draftKey);
+}
 
-  clearTimer();
-  refs.timer.classList.remove("warning");
-  updateTimerDisplay();
-  renderCurrentPage();
-  updateNavigationButtons();
-  updateProgress();
-  startTimer();
+function renderTimer() {
+  const minutes = Math.floor(state.remainingSeconds / 60);
+  const seconds = state.remainingSeconds % 60;
+  els.timer.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
+  els.timer.classList.toggle("is-low", state.remainingSeconds <= 60);
 }
 
 function startTimer() {
+  clearInterval(state.timerId);
+  renderTimer();
+
   state.timerId = setInterval(() => {
-    if (state.finished) {
-      return;
-    }
-
     state.remainingSeconds -= 1;
-    updateTimerDisplay();
-
-    if (state.remainingSeconds <= 60) {
-      refs.timer.classList.add("warning");
-    }
+    renderTimer();
+    saveDraft();
 
     if (state.remainingSeconds <= 0) {
-      submitQuiz("time");
+      finishQuiz("time");
     }
   }, 1000);
 }
 
-function clearTimer() {
-  if (state.timerId) {
-    clearInterval(state.timerId);
-    state.timerId = null;
-  }
+function renderQuestionNav() {
+  els.questionNav.innerHTML = quizData.map((question, index) => {
+    const page = Math.floor(index / CONFIG.questionsPerPage);
+    const classes = [
+      "nav-dot",
+      page === state.currentPage ? "is-current" : "",
+      isAnswered(question) ? "is-answered" : ""
+    ].filter(Boolean).join(" ");
+
+    return `<button class="${classes}" type="button" data-page="${page}" aria-label="Перейти к вопросу ${question.id}">${question.id}</button>`;
+  }).join("");
 }
 
-function handlePrevious() {
-  if (state.finished || state.currentPage === 0) {
-    return;
-  }
-
-  state.currentPage -= 1;
-  renderCurrentPage();
-  updateNavigationButtons();
+function renderProgress() {
+  const answeredCount = quizData.filter(isAnswered).length;
+  const percent = Math.round((answeredCount / quizData.length) * 100);
+  els.progressBar.style.width = `${percent}%`;
+  els.progressText.textContent = `${answeredCount} из ${quizData.length} отвечено`;
 }
 
-function handleNext() {
-  if (state.finished || state.currentPage >= TOTAL_PAGES - 1) {
-    return;
-  }
+function renderQuestions() {
+  const visibleQuestions = getVisibleQuestions();
+  const first = state.currentPage * CONFIG.questionsPerPage + 1;
+  const last = Math.min(first + CONFIG.questionsPerPage - 1, quizData.length);
 
-  state.currentPage += 1;
-  renderCurrentPage();
-  updateNavigationButtons();
+  els.pageLabel.textContent = `Страница ${state.currentPage + 1} из ${totalPages}`;
+  els.quizForm.innerHTML = visibleQuestions.map((question) => renderQuestion(question)).join("");
+
+  els.prevBtn.disabled = state.currentPage === 0;
+  els.nextBtn.hidden = state.currentPage === totalPages - 1;
+  els.submitBtn.hidden = state.currentPage !== totalPages - 1;
+  els.quizForm.setAttribute("aria-label", `Вопросы ${first}-${last}`);
+
+  renderQuestionNav();
+  renderProgress();
 }
 
-function handleSubmit() {
-  if (state.finished) {
-    return;
+function renderQuestion(question) {
+  const storedValue = getAnswer(question.id);
+
+  if (question.type === "mcq") {
+    const optionsHtml = question.options.map((option, index) => `
+      <label class="option">
+        <input
+          type="radio"
+          name="q${question.id}"
+          value="${index}"
+          ${Number(storedValue) === index ? "checked" : ""}
+          data-question-id="${question.id}"
+        />
+        <span>${escapeHtml(option)}</span>
+      </label>
+    `).join("");
+
+    return `
+      <article class="question-card" id="question-${question.id}">
+        <div class="question-header">
+          <p class="question-title">${question.id}. ${escapeHtml(question.q)}</p>
+          <span class="points">${question.points} балл.</span>
+        </div>
+        <div class="options">${optionsHtml}</div>
+      </article>
+    `;
   }
 
-  const shouldSubmit = window.confirm("Завершить тест и показать результаты? / Submit quiz now?");
-  if (shouldSubmit) {
-    submitQuiz("manual");
-  }
-}
-
-function submitQuiz(reason) {
-  if (state.finished) {
-    return;
-  }
-
-  state.finished = true;
-  clearTimer();
-
-  refs.prevBtn.disabled = true;
-  refs.nextBtn.disabled = true;
-  refs.submitBtn.disabled = true;
-
-  const results = calculateResults();
-  renderResults(results, reason);
-  void sendResultsToSheets(results, reason);
-}
-
-function calculateResults() {
-  const sectionScores = { 1: 0, 2: 0, 3: 0, 4: 0 };
-  const sectionMax = { 1: 0, 2: 0, 3: 0, 4: 0 };
-  const details = [];
-
-  let totalScore = 0;
-  let totalCorrect = 0;
-
-  for (const item of quizData) {
-    sectionMax[item.section] += item.points;
-
-    const userAnswer = state.answers[item.id] || "";
-    const correctAnswer = item.type === "mcq" ? item.options[item.correct] : item.correct;
-    const isCorrect = normalizeText(userAnswer) === normalizeText(correctAnswer);
-
-    if (isCorrect) {
-      totalScore += item.points;
-      totalCorrect += 1;
-      sectionScores[item.section] += item.points;
-    }
-
-    details.push({
-      id: item.id,
-      section: item.section,
-      question: item.q,
-      points: item.points,
-      type: item.type,
-      userAnswer,
-      correctAnswer,
-      isCorrect,
-      earned: isCorrect ? item.points : 0
-    });
-  }
-
-  return {
-    totalScore,
-    sectionScores,
-    sectionMax,
-    details,
-    totalCorrect,
-    totalIncorrect: quizData.length - totalCorrect,
-    level: determineLevel(totalScore),
-    timeUsedSeconds: TOTAL_TIME_SECONDS - Math.max(0, state.remainingSeconds)
-  };
-}
-
-function determineLevel(score) {
-  if (score >= 32) {
-    return "A2";
-  }
-
-  if (score >= 20) {
-    return "A1";
-  }
-
-  return "Beginner";
-}
-
-function renderResults(results, reason) {
-  const timeoutNote = reason === "time" ? "<p><strong>Время вышло:</strong> тест отправлен автоматически.</p>" : "";
-
-  refs.resultSummary.innerHTML = `
-    <p><strong>Student:</strong> ${escapeHtml(state.studentFullName)}</p>
-    <p><strong>Score:</strong> ${results.totalScore} / ${MAX_SCORE}</p>
-    <p><strong>Level:</strong> ${results.level}</p>
-    <p><strong>Time Used:</strong> ${formatTime(results.timeUsedSeconds)} / 10:00</p>
-    <p><strong>Correct / Incorrect:</strong> ${results.totalCorrect} / ${results.totalIncorrect}</p>
-    ${timeoutNote}
-  `;
-
-  refs.resultBreakdown.innerHTML = [1, 2, 3, 4]
-    .map((sectionId) => {
-      const score = results.sectionScores[sectionId];
-      const max = results.sectionMax[sectionId];
-      const percent = Math.round((score / max) * 100);
-      return `<div class="breakdown-item"><strong>Section ${sectionId}</strong>: ${score} / ${max} (${percent}%)</div>`;
-    })
-    .join("");
-
-  refs.detailedResults.innerHTML = results.details
-    .map((item) => {
-      const safeQuestion = escapeHtml(item.question);
-      const safeUser = item.userAnswer ? escapeHtml(item.userAnswer) : "<em>Нет ответа / No answer</em>";
-      const safeCorrect = escapeHtml(item.correctAnswer);
-      const explanation = item.type === "mcq"
-        ? "Проверка: точное совпадение выбранного варианта (без учета регистра)."
-        : "Проверка: trim + lowercase + удаление лишней пунктуации/пробелов.";
-
-      return `
-        <article class="result-item ${item.isCorrect ? "correct" : "incorrect"}">
-          <p><strong>Q${item.id} (Section ${item.section}, ${item.points} pts)</strong></p>
-          <p>${safeQuestion}</p>
-          <p><strong>Your answer:</strong> ${safeUser}</p>
-          <p><strong>Correct answer:</strong> ${safeCorrect}</p>
-          <p><strong>Result:</strong> ${item.isCorrect ? "Correct" : "Incorrect"} (${item.earned}/${item.points})</p>
-          <p><strong>Explanation:</strong> ${escapeHtml(explanation)}</p>
-        </article>
-      `;
-    })
-    .join("");
-
-  setSyncStatus("Подготовка отправки в Google Sheets...", "pending");
-  refs.resultsModal.classList.add("open");
-}
-
-async function sendResultsToSheets(results, reason) {
-  if (!SHEETS_WEB_APP_URL || SHEETS_WEB_APP_URL.includes("PASTE_")) {
-    setSyncStatus("Google Sheets не настроен: вставьте Web App URL в script.js", "error");
-    return;
-  }
-
-  const payload = {
-    submittedAtIso: new Date().toISOString(),
-    studentFirstName: state.studentFirstName,
-    studentLastName: state.studentLastName,
-    studentFullName: state.studentFullName,
-    score: results.totalScore,
-    maxScore: MAX_SCORE,
-    level: results.level,
-    correctCount: results.totalCorrect,
-    incorrectCount: results.totalIncorrect,
-    timeUsed: formatTime(results.timeUsedSeconds),
-    timeUsedSeconds: results.timeUsedSeconds,
-    finishReason: reason,
-    section1Score: results.sectionScores[1],
-    section1Max: results.sectionMax[1],
-    section2Score: results.sectionScores[2],
-    section2Max: results.sectionMax[2],
-    section3Score: results.sectionScores[3],
-    section3Max: results.sectionMax[3],
-    section4Score: results.sectionScores[4],
-    section4Max: results.sectionMax[4],
-    answers: results.details.map((item) => ({
-      id: item.id,
-      section: item.section,
-      points: item.points,
-      earned: item.earned,
-      isCorrect: item.isCorrect,
-      userAnswer: item.userAnswer,
-      correctAnswer: item.correctAnswer
-    }))
-  };
-
-  setSyncStatus("Отправляем результат в Google Sheets...", "pending");
-
-  try {
-    const response = await fetch(SHEETS_WEB_APP_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    setSyncStatus("Результат успешно отправлен в Google Sheets.", "success");
-  } catch (primaryError) {
-    try {
-      await fetch(SHEETS_WEB_APP_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      });
-      setSyncStatus("Результат отправлен (no-cors). Проверьте запись в таблице.", "success");
-    } catch (fallbackError) {
-      console.error("Google Sheets send failed", { primaryError, fallbackError });
-      setSyncStatus("Не удалось отправить результат. Проверьте URL Apps Script.", "error");
-    }
-  }
-}
-
-function setSyncStatus(message, type) {
-  refs.syncStatus.textContent = message;
-  refs.syncStatus.className = "sync-status";
-
-  if (type) {
-    refs.syncStatus.classList.add(type);
-  }
-}
-
-function handleRestart() {
-  refs.startForm.reset();
-  state.studentFirstName = "";
-  state.studentLastName = "";
-  state.studentFullName = "";
-
-  showStartScreen();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function renderCurrentPage() {
-  const start = state.currentPage * QUESTIONS_PER_PAGE;
-  const end = start + QUESTIONS_PER_PAGE;
-  const pageItems = quizData.slice(start, end);
-
-  refs.pageLabel.textContent = `${state.currentPage + 1} / ${TOTAL_PAGES}`;
-
-  refs.quizRegion.innerHTML = pageItems
-    .map((item, index) => {
-      const absoluteNumber = start + index + 1;
-      return renderQuestionCard(item, absoluteNumber);
-    })
-    .join("");
-
-  attachQuestionListeners();
-}
-
-function renderQuestionCard(item, questionNumber) {
-  const commonHeader = `
-    <article class="question-card" data-question-id="${item.id}">
-      <div class="question-meta">
-        <span>Question ${questionNumber} / ${quizData.length}</span>
-        <span>Section ${item.section} • ${item.points} pt${item.points > 1 ? "s" : ""}</span>
-      </div>
-      <h3 class="question-title">${escapeHtml(item.q)}</h3>
-  `;
-
-  if (item.type === "mcq") {
-    const options = item.options
-      .map((option, optionIndex) => {
-        const inputId = `q${item.id}_opt${optionIndex}`;
-        const checked = normalizeText(state.answers[item.id] || "") === normalizeText(option) ? "checked" : "";
-
-        return `
-          <label class="option-item" for="${inputId}">
-            <input
-              id="${inputId}"
-              type="radio"
-              name="question_${item.id}"
-              value="${optionIndex}"
-              data-question-id="${item.id}"
-              ${checked}
-            />
-            <span>${escapeHtml(option)}</span>
-          </label>
-        `;
-      })
-      .join("");
-
-    return `${commonHeader}<div class="option-list" role="radiogroup">${options}</div></article>`;
-  }
-
-  const value = escapeHtml(state.answers[item.id] || "");
   return `
-    ${commonHeader}
-      <label for="input_${item.id}" class="status-label">Введите ответ / Enter answer</label>
+    <article class="question-card" id="question-${question.id}">
+      <div class="question-header">
+        <label class="question-title" for="q${question.id}">${question.id}. ${escapeHtml(question.q)}</label>
+        <span class="points">${question.points} балл.</span>
+      </div>
       <input
-        id="input_${item.id}"
-        class="answer-input"
+        id="q${question.id}"
         type="text"
-        data-question-id="${item.id}"
-        placeholder="Type your answer"
-        value="${value}"
+        value="${escapeHtml(storedValue || "")}"
+        data-question-id="${question.id}"
         autocomplete="off"
+        spellcheck="false"
+        inputmode="text"
       />
     </article>
   `;
 }
 
-function attachQuestionListeners() {
-  const radios = refs.quizRegion.querySelectorAll('input[type="radio"]');
-  const textInputs = refs.quizRegion.querySelectorAll('input[type="text"]');
+function bindEvents() {
+  els.studentForm.addEventListener("submit", handleStart);
+  els.quizForm.addEventListener("input", handleAnswerInput);
+  els.quizForm.addEventListener("change", handleAnswerInput);
+  els.questionNav.addEventListener("click", handleQuestionNav);
+  els.prevBtn.addEventListener("click", () => goToPage(state.currentPage - 1));
+  els.nextBtn.addEventListener("click", () => goToPage(state.currentPage + 1));
+  els.submitBtn.addEventListener("click", () => finishQuiz("manual"));
+  els.clearDraftBtn.addEventListener("click", handleClearDraft);
+  els.closeModalBtn.addEventListener("click", () => els.resultModal.hidden = true);
+  els.restartBtn.addEventListener("click", restartQuiz);
 
-  radios.forEach((radio) => {
-    radio.addEventListener("change", (event) => {
-      const target = event.currentTarget;
-      const questionId = Number(target.dataset.questionId);
-      const question = questionMap[questionId];
-      const selectedOption = question.options[Number(target.value)] || "";
-
-      state.answers[questionId] = selectedOption;
-      updateProgress();
-    });
-  });
-
-  textInputs.forEach((textInput) => {
-    textInput.addEventListener("input", (event) => {
-      const target = event.currentTarget;
-      const questionId = Number(target.dataset.questionId);
-      state.answers[questionId] = target.value;
-      updateProgress();
-    });
+  window.addEventListener("beforeunload", (event) => {
+    if (!state.submitted && state.student) {
+      saveDraft();
+      event.preventDefault();
+      event.returnValue = "";
+    }
   });
 }
 
-function updateNavigationButtons() {
-  refs.prevBtn.disabled = state.currentPage === 0 || state.finished;
-  refs.nextBtn.disabled = state.currentPage === TOTAL_PAGES - 1 || state.finished;
-  refs.submitBtn.disabled = state.finished;
+function handleStart(event) {
+  event.preventDefault();
+
+  const firstName = els.firstNameInput.value.trim();
+  const lastName = els.lastNameInput.value.trim();
+
+  if (firstName.length < 2 || lastName.length < 2) {
+    els.startError.textContent = "Введите имя и фамилию минимум из 2 символов.";
+    els.startError.hidden = false;
+    return;
+  }
+
+  const draft = loadDraft();
+  const sameStudent = draft &&
+    normalizeText(draft.student.firstName) === normalizeText(firstName) &&
+    normalizeText(draft.student.lastName) === normalizeText(lastName);
+
+  state.student = {
+    firstName,
+    lastName,
+    fullName: `${firstName} ${lastName}`
+  };
+
+  if (sameStudent && confirm("Найден незавершённый тест для этого ученика. Продолжить с сохранённого места?")) {
+    state.currentPage = Number(draft.currentPage || 0);
+    state.answers = draft.answers || {};
+    state.startedAt = draft.startedAt || new Date().toISOString();
+    state.remainingSeconds = Math.max(1, Number(draft.remainingSeconds || CONFIG.secondsTotal));
+  } else {
+    state.currentPage = 0;
+    state.answers = {};
+    state.startedAt = new Date().toISOString();
+    state.remainingSeconds = CONFIG.secondsTotal;
+    clearDraft();
+  }
+
+  els.startScreen.hidden = true;
+  els.quizScreen.hidden = false;
+  els.studentNameLabel.textContent = state.student.fullName;
+  renderQuestions();
+  startTimer();
+  saveDraft();
 }
 
-function updateProgress() {
-  const answered = quizData.filter((item) => {
-    const answer = state.answers[item.id];
-    return typeof answer === "string" && normalizeText(answer).length > 0;
-  }).length;
+function handleAnswerInput(event) {
+  const target = event.target;
+  const questionId = target.dataset.questionId;
+  if (!questionId) return;
 
-  refs.progressLabel.textContent = `${answered} / ${quizData.length}`;
-  refs.progressBar.style.width = `${(answered / quizData.length) * 100}%`;
+  state.answers[questionId] = target.value;
+  renderQuestionNav();
+  renderProgress();
+  saveDraft();
 }
 
-function updateTimerDisplay() {
-  refs.timer.textContent = formatTime(Math.max(0, state.remainingSeconds));
+function handleQuestionNav(event) {
+  const button = event.target.closest("button[data-page]");
+  if (!button) return;
+  goToPage(Number(button.dataset.page));
 }
 
-function formatTime(totalSeconds) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+function goToPage(page) {
+  state.currentPage = Math.max(0, Math.min(totalPages - 1, page));
+  renderQuestions();
+  saveDraft();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function normalizeText(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+function handleClearDraft() {
+  if (!confirm("Сбросить все текущие ответы и начать тест заново?")) return;
+
+  state.answers = {};
+  state.currentPage = 0;
+  state.remainingSeconds = CONFIG.secondsTotal;
+  state.startedAt = new Date().toISOString();
+  clearDraft();
+  renderQuestions();
+  renderTimer();
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+function gradeQuiz() {
+  const sectionStats = {};
+  let score = 0;
+  let correctCount = 0;
+  const answerRows = [];
+
+  for (const question of quizData) {
+    const sectionKey = `section${question.section}`;
+    if (!sectionStats[sectionKey]) {
+      sectionStats[sectionKey] = { score: 0, max: 0 };
+    }
+    sectionStats[sectionKey].max += question.points;
+
+    const rawAnswer = getAnswer(question.id);
+    const normalizedAnswer = normalizeText(rawAnswer);
+    let expected;
+    let isCorrect = false;
+
+    if (question.type === "mcq") {
+      const selectedIndex = rawAnswer === undefined || rawAnswer === "" ? null : Number(rawAnswer);
+      expected = question.options[question.correct];
+      isCorrect = selectedIndex === question.correct;
+    } else {
+      expected = question.correct;
+      isCorrect = normalizedAnswer === normalizeText(question.correct);
+    }
+
+    const earned = isCorrect ? question.points : 0;
+    score += earned;
+    sectionStats[sectionKey].score += earned;
+    if (isCorrect) correctCount += 1;
+
+    answerRows.push({
+      id: question.id,
+      section: question.section,
+      type: question.type,
+      question: question.q,
+      answer: question.type === "mcq" && rawAnswer !== undefined ? question.options[Number(rawAnswer)] : (rawAnswer || ""),
+      expected,
+      isCorrect,
+      points: earned,
+      maxPoints: question.points
+    });
+  }
+
+  return {
+    score,
+    maxScore,
+    level: getLevel(score, maxScore),
+    correctCount,
+    incorrectCount: quizData.length - correctCount,
+    sectionStats,
+    answers: answerRows
+  };
 }
+
+function getLevel(score, max) {
+  const ratio = score / max;
+  if (ratio >= 0.85) return "A2 strong";
+  if (ratio >= 0.70) return "A2";
+  if (ratio >= 0.50) return "A1";
+  return "Needs practice";
+}
+
+function formatDuration(seconds) {
+  const safeSeconds = Math.max(0, Math.round(seconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const rest = safeSeconds % 60;
+  return `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+
+async function finishQuiz(reason) {
+  if (state.submitted) return;
+
+  if (reason === "manual") {
+    const unanswered = quizData.filter((question) => !isAnswered(question)).length;
+    const message = unanswered > 0
+      ? `Не отвечено вопросов: ${unanswered}. Завершить тест?`
+      : "Завершить тест и отправить результат?";
+    if (!confirm(message)) return;
+  }
+
+  state.submitted = true;
+  clearInterval(state.timerId);
+  state.finishedAt = new Date().toISOString();
+
+  const timeUsedSeconds = CONFIG.secondsTotal - Math.max(0, state.remainingSeconds);
+  const graded = gradeQuiz();
+  const payload = buildPayload(graded, reason, timeUsedSeconds);
+
+  renderResult(graded, payload);
+  els.resultModal.hidden = false;
+  clearDraft();
+
+  await sendResult(payload);
+}
+
+function buildPayload(graded, finishReason, timeUsedSeconds) {
+  const sections = {};
+  for (let section = 1; section <= 4; section += 1) {
+    const stats = graded.sectionStats[`section${section}`] || { score: 0, max: 0 };
+    sections[`section${section}Score`] = stats.score;
+    sections[`section${section}Max`] = stats.max;
+  }
+
+  return {
+    studentFullName: state.student.fullName,
+    studentFirstName: state.student.firstName,
+    studentLastName: state.student.lastName,
+    score: graded.score,
+    maxScore: graded.maxScore,
+    level: graded.level,
+    correctCount: graded.correctCount,
+    incorrectCount: graded.incorrectCount,
+    timeUsed: formatDuration(timeUsedSeconds),
+    timeUsedSeconds,
+    finishReason,
+    startedAt: state.startedAt,
+    finishedAt: state.finishedAt,
+    ...sections,
+    answers: JSON.stringify(graded.answers)
+  };
+}
+
+async function sendResult(payload) {
+  els.saveStatus.textContent = "Сохраняем результат…";
+  els.saveStatus.className = "save-status";
+
+  try {
+    const formData = new FormData();
+    Object.entries(payload).forEach(([key, value]) => formData.append(key, value));
+
+    await fetch(CONFIG.appsScriptUrl, {
+      method: "POST",
+      mode: "no-cors",
+      body: formData
+    });
+
+    els.saveStatus.textContent = "Результат отправлен в Google Sheets";
+    els.saveStatus.className = "save-status is-ok";
+  } catch (error) {
+    console.error("Result submit failed", error);
+    els.saveStatus.textContent = "Не удалось отправить результат. Скопируйте данные из отчёта.";
+    els.saveStatus.className = "save-status is-fail";
+  }
+}
+
+function renderResult(graded, payload) {
+  const percent = Math.round((graded.score / graded.maxScore) * 100);
+
+  els.resultSummary.innerHTML = `
+    <div class="result-tile">
+      <div class="muted">Балл</div>
+      <div class="result-value">${graded.score}/${graded.maxScore}</div>
+    </div>
+    <div class="result-tile">
+      <div class="muted">Процент</div>
+      <div class="result-value">${percent}%</div>
+    </div>
+    <div class="result-tile">
+      <div class="muted">Уровень</div>
+      <div class="result-value">${escapeHtml(graded.level)}</div>
+    </div>
+  `;
+
+  els.sectionBreakdown.innerHTML = [1, 2, 3, 4].map((section) => {
+    const stats = graded.sectionStats[`section${section}`] || { score: 0, max: 0 };
+    return `
+      <div class="section-tile">
+        <div class="muted">Раздел ${section}</div>
+        <strong>${stats.score}/${stats.max}</strong>
+      </div>
+    `;
+  }).join("");
+
+  els.answerReview.innerHTML = graded.answers.map((row) => `
+    <div class="review-item ${row.isCorrect ? "correct" : "incorrect"}">
+      <strong>${row.isCorrect ? "Верно" : "Ошибка"} · Вопрос ${row.id}</strong>
+      <div>${escapeHtml(row.question)}</div>
+      <div><span class="muted">Ответ:</span> ${escapeHtml(row.answer || "—")}</div>
+      <div><span class="muted">Правильно:</span> ${escapeHtml(row.expected)}</div>
+    </div>
+  `).join("");
+
+  console.info("Quiz result payload", payload);
+}
+
+function restartQuiz() {
+  clearDraft();
+  clearInterval(state.timerId);
+  Object.assign(state, {
+    student: null,
+    currentPage: 0,
+    answers: {},
+    startedAt: null,
+    finishedAt: null,
+    remainingSeconds: CONFIG.secondsTotal,
+    timerId: null,
+    submitted: false
+  });
+
+  els.resultModal.hidden = true;
+  els.quizScreen.hidden = true;
+  els.startScreen.hidden = false;
+  els.studentForm.reset();
+  els.firstNameInput.focus();
+}
+
+bindEvents();
