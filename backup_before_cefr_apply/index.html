@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Malay Quiz CEFR</title>
-  <meta name="description" content="Malay Quiz — уровневые тесты A1, A2, B1, B2, C1, C2" />
+  <title>Malay Quiz A1-C2</title>
+  <meta name="description" content="Malay Quiz A1-C2 — тест по малайскому языку" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="app-shell">
     <section id="startScreen" class="card start-card" aria-labelledby="startTitle">
-      <div class="eyebrow">Malay Quiz · CEFR</div>
+      <div class="eyebrow">Malay Quiz A1-C2</div>
       <h1 id="startTitle">Тест по малайскому языку</h1>
-      <p class="lead">Выберите доступный уровень, пройдите тест на 70% или выше и откройте следующий уровень.</p>
+      <p class="lead">30 вопросов, 10 минут, результат автоматически сохраняется.</p>
 
       <form id="studentForm" class="student-form" novalidate>
         <div class="form-grid">
@@ -24,26 +24,25 @@
             <span>Фамилия</span>
             <input id="lastNameInput" name="lastName" type="text" autocomplete="family-name" required minlength="2" />
           </label>
+          <label>
+            <span>Уровень</span>
+            <select id="levelSelect" name="level" required>
+              <option value="A1">A1</option>
+              <option value="A2">A2</option>
+              <option value="B1">B1</option>
+              <option value="B2">B2</option>
+              <option value="C1">C1</option>
+              <option value="C2">C2</option>
+            </select>
+          </label>
         </div>
-
-        <section class="level-section" aria-labelledby="levelTitle">
-          <div class="level-section-head">
-            <div>
-              <h2 id="levelTitle">Уровни</h2>
-              <p id="progressHint" class="muted">Введите имя и фамилию, чтобы увидеть персональный прогресс.</p>
-            </div>
-            <button id="resetProgressBtn" class="ghost-btn" type="button" hidden>Сбросить прогресс</button>
-          </div>
-          <div id="levelGrid" class="level-grid" role="radiogroup" aria-label="Выбор уровня"></div>
-        </section>
-
         <p id="startError" class="error-text" role="alert" hidden></p>
-        <button id="startBtn" class="primary-btn" type="submit">Начать тест</button>
+        <button class="primary-btn" type="submit">Начать тест</button>
       </form>
 
       <div class="rules">
         <strong>Правила:</strong>
-        <span>30 вопросов, 10 минут, 5 вопросов на страницу. Проходной порог — 70%. Черновик ответов сохраняется локально.</span>
+        <span>не обновляйте страницу во время теста; текстовые ответы проверяются без учёта регистра и лишних пробелов.</span>
       </div>
     </section>
 
@@ -52,11 +51,7 @@
         <div>
           <div class="muted">Участник</div>
           <strong id="studentNameLabel"></strong>
-        </div>
-
-        <div>
-          <div class="muted">Уровень</div>
-          <strong id="selectedLevelLabel"></strong>
+          <div class="muted" id="levelLabel"></div>
         </div>
 
         <div class="timer-box" aria-live="polite">
@@ -106,7 +101,7 @@
         <summary>Посмотреть ответы</summary>
         <div id="answerReview"></div>
       </details>
-      <button id="restartBtn" class="primary-btn" type="button">Вернуться к уровням</button>
+      <button id="restartBtn" class="primary-btn" type="button">Пройти заново</button>
     </div>
   </div>
 
