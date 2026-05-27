@@ -2282,6 +2282,20 @@ function formatTime(totalSeconds) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
+function showStartScreen() {
+  els.startScreen.hidden = false;
+  els.startScreen.style.display = "block";
+  els.quizScreen.hidden = true;
+  els.quizScreen.style.display = "none";
+}
+
+function showQuizScreen() {
+  els.startScreen.hidden = true;
+  els.startScreen.style.display = "none";
+  els.quizScreen.hidden = false;
+  els.quizScreen.style.display = "grid";
+}
+
 function updateTimer() {
   els.timer.textContent = formatTime(state.remainingSeconds);
   els.timer.classList.toggle("low", state.remainingSeconds <= 60);
@@ -2578,8 +2592,7 @@ function beginQuiz(student, level) {
   state.submitted = false;
   state.attemptNumberForLevel = (progress.attempts?.[level] || 0) + 1;
 
-  els.startScreen.hidden = true;
-  els.quizScreen.hidden = false;
+  showQuizScreen();
   renderQuiz();
   startTimer();
 }
@@ -2602,8 +2615,7 @@ function resetToStart() {
   state.remainingSeconds = CONFIG.secondsTotal;
   state.submitted = false;
   els.resultModal.hidden = true;
-  els.quizScreen.hidden = true;
-  els.startScreen.hidden = false;
+  showStartScreen();
   renderLevelCards();
 }
 
@@ -2696,6 +2708,7 @@ function validateQuestionBanks() {
 function init() {
   validateQuestionBanks();
   bindEvents();
+  showStartScreen();
   renderLevelCards();
 }
 
