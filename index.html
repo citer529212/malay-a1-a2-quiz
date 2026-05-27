@@ -14,7 +14,7 @@
       <h1 id="startTitle">Тест по малайскому языку</h1>
       <p class="lead">Выберите доступный уровень, пройдите тест на 70% или выше и откройте следующий уровень.</p>
 
-      <form id="studentForm" class="student-form" novalidate>
+      <form id="studentForm" class="student-form" novalidate onsubmit="return false;">
         <div class="form-grid">
           <label>
             <span>Имя</span>
@@ -38,7 +38,7 @@
         </section>
 
         <p id="startError" class="error-text" role="alert" hidden></p>
-        <button id="startBtn" class="primary-btn" type="submit">Начать тест</button>
+        <button id="startBtn" class="primary-btn" type="button">Начать тест</button>
       </form>
 
       <div class="rules">

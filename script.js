@@ -2584,6 +2584,15 @@ function beginQuiz(student, level) {
   startTimer();
 }
 
+function handleStartAttempt() {
+  const student = readCurrentIdentity();
+  if (!student) {
+    showStartError("Введите имя и фамилию минимум по 2 символа.");
+    return;
+  }
+  beginQuiz(student, state.selectedLevel);
+}
+
 function resetToStart() {
   clearInterval(state.timerId);
   state.currentPage = 0;
@@ -2618,12 +2627,15 @@ function bindEvents() {
 
   els.studentForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    const student = readCurrentIdentity();
-    if (!student) {
-      showStartError("Введите имя и фамилию минимум по 2 символа.");
-      return;
-    }
-    beginQuiz(student, state.selectedLevel);
+    handleStartAttempt();
+  });
+  els.startBtn.addEventListener("click", handleStartAttempt);
+  els.studentForm.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    event.preventDefault();
+    handleStartAttempt();
   });
 
   els.resetProgressBtn.addEventListener("click", () => {
